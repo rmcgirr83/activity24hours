@@ -130,7 +130,7 @@ class listener implements EventSubscriberInterface
 			}
 
 			$max_last_visit = max($row['user_lastvisit'], $row['session_time']);
-			$hover_info = ' title="' . $this->user->format_date($max_last_visit) . '"';
+			$hover_info = ' title="' . $this->user->format_date($max_last_visit, false, false) . '"';
 			++$user_count;
 			$this->template->assign_block_vars('lastvisit', array(
 				'USERNAME_FULL'	=> '<span' . $hover_info . '>' . get_username_string((($row['user_type'] == USER_IGNORE) ? 'no_profile' : 'full'), $row['user_id'], $row['username'], $row['user_colour']) . '</span>',
