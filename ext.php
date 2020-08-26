@@ -31,7 +31,7 @@ class ext extends \phpbb\extension\base
 		if (!$enableable)
 		{
 			$language = $this->container->get('language');
-			$this->language->add_lang('common', 'rmcgirr83/activity24hours');
+			$language->add_lang('common', 'rmcgirr83/activity24hours');
 
 			trigger_error($language->lang('EXTENSION_REQUIREMENTS', self::PHPBB_MIN_VERSION), E_USER_WARNING);
 		}
