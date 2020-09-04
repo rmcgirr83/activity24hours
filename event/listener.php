@@ -55,6 +55,9 @@ class listener implements EventSubscriberInterface
 	/** @var \rmcgirr83\hidebots\event\listener */
 	private $hidebots;
 
+	/** @var \senky\relativedates\event\listener */
+	private $relativedates;
+
 	public function __construct(
 		auth $auth,
 		cache_service $cache,
