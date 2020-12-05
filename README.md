@@ -5,8 +5,6 @@ Activity 24 Hours
 
 Extension lists of all registered users who have visited the board in the last 24 hours as well as lists stats on the number of new posts, new topics and new users within the last 24 hours.
 
-[![Build Status](https://travis-ci.com/rmcgirr83/activity24hours.svg?branch=master)](https://travis-ci.com/rmcgirr83/activity24hours)
-
 ## Installation
 
 ### 1. clone
