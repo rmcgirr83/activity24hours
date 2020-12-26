@@ -1,9 +1,8 @@
-Activity 24 Hours
-===============
-
-Activity 24 Hours
+# ![Activity 24 Hours](https://imattpro.github.io/logo/search.png "Activity 24 Hours") Activity 24 hours for phpBB3
 
 Extension lists of all registered users who have visited the board in the last 24 hours as well as lists stats on the number of new posts, new topics and new users within the last 24 hours.
+
+[![Build Status](https://github.com/rmcgirr83/activity24hours/workflows/Tests/badge.svg)](https://github.com/rmcgirr83/activity24hours/actions)
 
 ## Installation
 
