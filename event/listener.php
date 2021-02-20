@@ -14,9 +14,9 @@ namespace rmcgirr83\activity24hours\event;
 * @ignore
 */
 use phpbb\auth\auth;
-use phpbb\cache\service as cache_service;
+use phpbb\cache\service as cache;
 use phpbb\config\config;
-use phpbb\db\driver\driver_interface;
+use phpbb\db\driver\driver_interface as db;
 use phpbb\event\dispatcher_interface as dispatcher;
 use phpbb\language\language;
 use phpbb\template\template;
@@ -28,47 +28,47 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 */
 class listener implements EventSubscriberInterface
 {
-	/** @var \phpbb\auth\auth */
+	/** @var auth $auth */
 	protected $auth;
 
-	/** @var \phpbb\cache\service */
+	/** @var cache $cache */
 	protected $cache;
 
-	/** @var \phpbb\config\config */
+	/** @var config $config */
 	protected $config;
 
-	/** @var \phpbb\db\driver\driver_interface */
+	/** @var db $db */
 	protected $db;
 
-	/** @var \phpbb\event\dispatcher_interface */
+	/** @var dispatcher $dispatcher */
 	protected $dispatcher;
 
-	/** @var \phpbb\language\language */
+	/** @var language $language */
 	protected $language;
 
-	/** @var \phpbb\template\template */
+	/** @var template $template */
 	protected $template;
 
-	/** @var \phpbb\user */
+	/** @var user $user */
 	protected $user;
 
-	/** @var \rmcgirr83\hidebots\event\listener */
+	/** @var hidebots $hidebots */
 	private $hidebots;
 
-	/** @var \senky\relativedates\event\listener */
+	/** @var relativedates $relativedates */
 	private $relativedates;
 
 	public function __construct(
 		auth $auth,
-		cache_service $cache,
+		cache $cache,
 		config $config,
-		driver_interface $db,
+		db $db,
 		dispatcher $dispatcher,
 		language $language,
 		template $template,
 		user $user,
-		\rmcgirr83\hidebots\event\listener $hidebots = null,
-		\senky\relativedates\event\listener $relativedates = null)
+		hidebots $hidebots = null,
+		relativedates $relativedates = null)
 	{
 		$this->auth = $auth;
 		$this->cache = $cache;
