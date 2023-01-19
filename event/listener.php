@@ -145,6 +145,63 @@ class listener implements EventSubscriberInterface
 
 		$this->language->add_lang('common', 'rmcgirr83/activity24hours');
 
+		// This sets our header to be dynamic based on the seconds input in the look_back function that is defined at the bottom of this file
+		$lookback_seconds = $this->look_back();
+
+		$seconds_error = '';
+		if ($lookback_seconds < 60)
+		{
+			$seconds_error = $this->auth->acl_get('a_') ? true : false;
+		}
+
+		$seconds_in_a_minute = 60;
+		$seconds_in_an_hour = 3600;
+		$seconds_in_a_day = 24 * $seconds_in_an_hour;
+
+		// Extract days
+		$days = floor($lookback_seconds / $seconds_in_a_day);
+
+		// Extract hours
+		$hour_seconds = $lookback_seconds % $seconds_in_a_day;
+		$hours = floor($hour_seconds / $seconds_in_an_hour);
+
+		// Extract minutes
+		$minute_seconds = $hour_seconds % $seconds_in_an_hour;
+		$minutes = floor($minute_seconds / $seconds_in_a_minute);
+
+		// Format
+		$timeparts = [];
+		$sections = [
+			'DAY'	=> (int) $days,
+			'HOUR'	=> (int) $hours,
+			'MIN'	=> (int) $minutes,
+		];
+
+		foreach ($sections as $name => $value)
+		{
+			if ($value > 0)
+			{
+				$timeparts[] = $this->language->lang('24HOUR_' . $name, $value);
+			}
+		}
+
+		$timeparts_count = count($timeparts);
+
+		$lookback_string = '';
+
+		if ($timeparts_count == 3)
+		{
+			$lookback_string = $timeparts[0] . $this->language->lang('COMMA_SEPARATOR') . $timeparts[1] . $this->language->lang('24HOUR_AND') . $timeparts[2];
+		}
+		else if ($timeparts_count == 2)
+		{
+			$lookback_string = implode($this->language->lang('24HOUR_AND'), $timeparts);
+		}
+		else
+		{
+			$lookback_string = implode('', $timeparts);
+		}
+
 		// obtain posts/topics/new users activity
 		$activity = $this->obtain_activity_data();
 
@@ -234,6 +291,10 @@ class listener implements EventSubscriberInterface
 			'HOUR_POSTS'			=> $this->language->lang('24HOUR_POSTS', $activity['posts']),
 			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['users']),
 			'S_CAN_VIEW_24_HOURS'	=> $this->auth->acl_get('u_a24hrs_view') ? true : false,
+			
+			'HOUR_ERROR'			=> $seconds_error,
+
+			'L_TWENTYFOURHOUR_STATS'	=> $this->language->lang('TWENTYFOURHOUR_STATS') . ' ' . $lookback_string,
 		];
 		/**
 		* Modify activity display
@@ -259,7 +320,7 @@ class listener implements EventSubscriberInterface
 	 */
 	private function obtain_active_user_data()
 	{
-		$interval = $this->define_interval();
+		$interval = $this->define_interval($this->look_back());
 		if (($active_users = $this->cache->get('_24hour_users')) === false)
 		{
 			// grab a list of users who are currently online
@@ -320,7 +381,7 @@ class listener implements EventSubscriberInterface
 	 */
 	private function obtain_activity_data()
 	{
-		$interval = $this->define_interval();
+		$interval = $this->define_interval($this->look_back());
 		if (($activity = $this->cache->get('_24hour_activity')) === false)
 		{
 			// total new posts in the last 24 hours
@@ -356,7 +417,7 @@ class listener implements EventSubscriberInterface
 	private function obtain_guest_count_24()
 	{
 		$total_guests_online_24 = 0;
-		$interval = $this->define_interval();
+		$interval = $this->define_interval($this->look_back());
 		if ($this->config['load_online_guests'])
 		{
 			// Get number of online guests for the past 24 hours
@@ -391,7 +452,7 @@ class listener implements EventSubscriberInterface
 		return $total_guests_online_24;
 	}
 
-	public function define_interval()
+	public function look_back()
 	{
 		/* you can define the amount to look back
 		 * be careful with this, it may cause performance issues on your forum
@@ -399,6 +460,7 @@ class listener implements EventSubscriberInterface
 		 * 86400 = 24 hours
 		 * 604800 = past 7 days
 		 * 2628000 = past month
+		 * DO NOT SET THE NUMBER OF SECONDS TO LESS THAN 60
 		*/
 		$look_back = 86400;
 
@@ -413,6 +475,11 @@ class listener implements EventSubscriberInterface
 		$vars = ['look_back'];
 		extract($this->dispatcher->trigger_event('rmcgirr83.activity24hours.modify_activity_look_back', compact($vars)));
 
+		return $look_back;
+	}
+
+	private function define_interval($look_back = 0)
+	{
 		return (time() - $look_back);
 	}
 }

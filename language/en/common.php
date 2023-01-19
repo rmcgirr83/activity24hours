@@ -44,17 +44,30 @@ $lang = array_merge($lang, [
 		1 => ' and %d guest',
 		2 => ' and %d guests',
 	],
-	'LAST_24_HOURS'	=> ' active over the last 24 hours',
+	'24HOUR_DAY' => [
+		1 => 'day',
+		2 => '%d days',
+	],
+	'24HOUR_HOUR' => [
+		1 => ' %d hour',
+		2 => ' %d hours',
+	],
+	'24HOUR_MIN' => [
+		1 => ' %d minute',
+		2 => ' %d mintues',
+	],	
+	'24HOUR_AND' => ' and ',
 	'24HOUR_TOPICS'			=> 'New topics %d',
 	'24HOUR_POSTS'			=> 'New posts %d',
 	'24HOUR_USERS'			=> 'New users %d',
 	'NO_ONLINE_BOTS'		=> 'No Bots active',
 
-	'TWENTYFOURHOUR_STATS'	=> 'Activity over the last 24 hours',
+	'TWENTYFOURHOUR_STATS'	=> 'Activity over the past',
 	'TOTAL_24HOUR_USERS'	=> [
 		1 => 'In total there was %d user :: ',
 		2 => 'In total there were %d users :: ',
 	],
+	'24HOUR_INVALID'	=> 'Please set the number of seconds in the 24Hour Activity extension listener file to greater than 60',
 	'SHOW_LIST'	=> 'Show List',
 	'HIDE_LIST'	=> 'Hide List',
 	'EXTENSION_REQUIREMENTS'	=> 'This extension requires phpBB version %1$s.<br>Please check which versions you have and update accordingly to use this extension.',

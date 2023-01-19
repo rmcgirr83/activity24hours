@@ -2,8 +2,8 @@
     "name": "rmcgirr83/activity24hours",
     "type": "phpbb-extension",
     "description": "Extension provides a list of all registered users who have visited the board in the last 24 hours as well as displays stats on the number of new posts, new topics and new users within the last 24 hours",
-    "version": "1.2.3",
-    "time": "2020-09-21",
+    "version": "1.3.0",
+    "time": "2023-01-18",
     "keywords": [
         "phpbb",
         "extension",
