@@ -291,7 +291,7 @@ class listener implements EventSubscriberInterface
 			'HOUR_POSTS'			=> $this->language->lang('24HOUR_POSTS', $activity['posts']),
 			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['users']),
 			'S_CAN_VIEW_24_HOURS'	=> $this->auth->acl_get('u_a24hrs_view') ? true : false,
-			
+
 			'HOUR_ERROR'			=> $seconds_error,
 
 			'L_TWENTYFOURHOUR_STATS'	=> $this->language->lang('TWENTYFOURHOUR_STATS') . ' ' . $lookback_string,

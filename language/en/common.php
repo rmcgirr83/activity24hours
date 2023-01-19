@@ -55,7 +55,7 @@ $lang = array_merge($lang, [
 	'24HOUR_MIN' => [
 		1 => ' %d minute',
 		2 => ' %d mintues',
-	],	
+	],
 	'24HOUR_AND' => ' and ',
 	'24HOUR_TOPICS'			=> 'New topics %d',
 	'24HOUR_POSTS'			=> 'New posts %d',
