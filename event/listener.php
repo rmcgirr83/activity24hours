@@ -21,6 +21,7 @@ use phpbb\event\dispatcher_interface as dispatcher;
 use phpbb\language\language;
 use phpbb\template\template;
 use phpbb\user;
+use phpbb\extension\manager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -57,6 +58,9 @@ class listener implements EventSubscriberInterface
 
 	/** @var relativedates $relativedates */
 	private $relativedates;
+	
+	/** @var ext_manager $ext_manager */
+	protected $ext_manager;
 
 	public function __construct(
 		auth $auth,
@@ -68,7 +72,8 @@ class listener implements EventSubscriberInterface
 		template $template,
 		user $user,
 		hidebots $hidebots = null,
-		relativedates $relativedates = null)
+		relativedates $relativedates = null,
+		manager $ext_manager)
 	{
 		$this->auth = $auth;
 		$this->cache = $cache;
@@ -80,6 +85,7 @@ class listener implements EventSubscriberInterface
 		$this->user = $user;
 		$this->hidebots = $hidebots;
 		$this->relativedates = $relativedates;
+		$this->ext_manager	 = $ext_manager;
 	}
 
 	/**
@@ -291,7 +297,8 @@ class listener implements EventSubscriberInterface
 			'HOUR_POSTS'			=> $this->language->lang('24HOUR_POSTS', $activity['posts']),
 			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['users']),
 			'S_CAN_VIEW_24_HOURS'	=> $this->auth->acl_get('u_a24hrs_view') ? true : false,
-
+			'S_TABBEDSTATBLOCK'		=> $this->ext_manager->is_enabled('zyleta/tabbedstatblock'),
+			
 			'HOUR_ERROR'			=> $seconds_error,
 
 			'L_TWENTYFOURHOUR_STATS'	=> $this->language->lang('TWENTYFOURHOUR_STATS') . ' ' . $lookback_string,
