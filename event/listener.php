@@ -58,7 +58,7 @@ class listener implements EventSubscriberInterface
 
 	/** @var relativedates $relativedates */
 	private $relativedates;
-	
+
 	/** @var ext_manager $ext_manager */
 	protected $ext_manager;
 
@@ -298,7 +298,7 @@ class listener implements EventSubscriberInterface
 			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['users']),
 			'S_CAN_VIEW_24_HOURS'	=> $this->auth->acl_get('u_a24hrs_view') ? true : false,
 			'S_TABBEDSTATBLOCK'		=> $this->ext_manager->is_enabled('zyleta/tabbedstatblock'),
-			
+
 			'HOUR_ERROR'			=> $seconds_error,
 
 			'L_TWENTYFOURHOUR_STATS'	=> $this->language->lang('TWENTYFOURHOUR_STATS') . ' ' . $lookback_string,
