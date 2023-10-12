@@ -21,7 +21,7 @@ use phpbb\event\dispatcher_interface as dispatcher;
 use phpbb\language\language;
 use phpbb\template\template;
 use phpbb\user;
-use phpbb\extension\manager;
+use phpbb\extension\manager as ext_manager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -73,7 +73,7 @@ class listener implements EventSubscriberInterface
 		user $user,
 		hidebots $hidebots = null,
 		relativedates $relativedates = null,
-		manager $ext_manager)
+		ext_manager $ext_manager)
 	{
 		$this->auth = $auth;
 		$this->cache = $cache;
@@ -86,6 +86,10 @@ class listener implements EventSubscriberInterface
 		$this->hidebots = $hidebots;
 		$this->relativedates = $relativedates;
 		$this->ext_manager	 = $ext_manager;
+
+		// the amount of time to lookback for activity
+		// look back time can be set at the bottom of this file in the look_back function
+		$this->lookback = $this->define_interval($this->look_back());
 	}
 
 	/**
@@ -151,7 +155,7 @@ class listener implements EventSubscriberInterface
 
 		$this->language->add_lang('common', 'rmcgirr83/activity24hours');
 
-		// This sets our header to be dynamic based on the seconds input in the look_back function that is defined at the bottom of this file
+		// This sets our header for the extension to be dynamic based on the seconds input in the look_back function that is defined at the bottom of this file
 		$lookback_seconds = $this->look_back();
 
 		$seconds_error = '';
@@ -218,62 +222,65 @@ class listener implements EventSubscriberInterface
 		$total_guests_online_24 = $this->obtain_guest_count_24();
 
 		$user_count = $bot_count = $hidden_count = 0;
-		$interval = $this->define_interval();
+
 		// we hide bots according to the hide bots extension
 		$hide_bots = (!$this->auth->acl_get('a_') && $this->hidebots !== null) ? true : false;
 
-		// parse the activity
-		foreach ((array) $active_users as $row)
+		if (!empty($active_users))
 		{
-			// the users stuff...this is changed below depending
-			$username_string = $this->auth->acl_get('u_viewprofile') ? get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']) : get_username_string('no_profile', $row['user_id'], $row['username'], $row['user_colour']);
-			$max_last_visit = max($row['user_lastvisit'], $row['session_time']);
-
-			// relativedates installed?
-			if ($this->relativedates !== null)
+			// parse the activity
+			foreach ($active_users as $row)
 			{
-				$hover_info = $this->user->format_date($max_last_visit, false, false, false);
-			}
-			else
-			{
-				$hover_info = $this->user->format_date($max_last_visit);
-			}
+				// the users stuff...this is changed below depending
+				$username_string = $this->auth->acl_get('u_viewprofile') ? get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']) : get_username_string('no_profile', $row['user_id'], $row['username'], $row['user_colour']);
+				$max_last_visit = max($row['user_lastvisit'], $row['session_time']);
 
-			$hover_info = ' title="' . $hover_info . '"';
-
-			if (($hide_bots && $row['user_type'] == USER_IGNORE) || ($row['user_lastvisit'] < $interval && $row['session_time'] < $interval))
-			{
-				continue;
-			}
-
-			if (((!$row['session_viewonline'] && !empty($row['session_time'])) || !$row['user_allow_viewonline']) && $row['user_type'] != USER_IGNORE )
-			{
-				++$hidden_count;
-				if ($this->auth->acl_get('u_viewonline') || $row['user_id'] == $this->user->data['user_id'])
+				// relativedates installed?
+				if ($this->relativedates !== null)
 				{
-					$row['username'] = '<em>' . $row['username'] . '</em>';
-					$username_string = get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']);
+					$hover_info = $this->user->format_date($max_last_visit, false, false, false);
 				}
 				else
 				{
-					++$user_count;
+					$hover_info = $this->user->format_date($max_last_visit);
+				}
+
+				$hover_info = ' title="' . $hover_info . '"';
+
+				if (($hide_bots && $row['user_type'] == USER_IGNORE) || ($row['user_lastvisit'] < $this->lookback && $row['session_time'] < $this->lookback))
+				{
 					continue;
 				}
-			}
-			// to seperate bots from normal users
-			else if ($row['user_type'] == USER_IGNORE)
-			{
-				++$bot_count;
-				$this->template->assign_block_vars('bot_lastvisit', [
-					'BOTNAME_FULL'	=> '<span' . $hover_info . '>' . get_username_string('no_profile', $row['user_id'], $row['username'], $row['user_colour']) . '</span>',
-				]);
-				continue;
-			}
 
-			++$user_count;
-			$this->template->assign_block_vars('lastvisit', [
-				'USERNAME_FULL'	=> '<span' . $hover_info . '>' . $username_string . '</span>',
-			]);
+				if (((!$row['session_viewonline'] && !empty($row['session_time'])) || !$row['user_allow_viewonline']) && $row['user_type'] != USER_IGNORE )
+				{
+					++$hidden_count;
+					if ($this->auth->acl_get('u_viewonline') || $row['user_id'] == $this->user->data['user_id'])
+					{
+						$row['username'] = '<em>' . $row['username'] . '</em>';
+						$username_string = get_username_string('full', $row['user_id'], $row['username'], $row['user_colour']);
+					}
+					else
+					{
+						++$user_count;
+						continue;
+					}
+				}
+				// to seperate bots from normal users
+				else if ($row['user_type'] == USER_IGNORE)
+				{
+					++$bot_count;
+					$this->template->assign_block_vars('bot_lastvisit', [
+						'BOTNAME_FULL'	=> '<span' . $hover_info . '>' . get_username_string('no_profile', $row['user_id'], $row['username'], $row['user_colour']) . '</span>',
+					]);
+					continue;
+				}
+
+				++$user_count;
+				$this->template->assign_block_vars('lastvisit', [
+					'USERNAME_FULL'	=> '<span' . $hover_info . '>' . $username_string . '</span>',
+				]);
+			}
 		}
 
 		$display_link = false;
@@ -327,11 +334,10 @@ class listener implements EventSubscriberInterface
 	 */
 	private function obtain_active_user_data()
 	{
-		$interval = $this->define_interval($this->look_back());
 		if (($active_users = $this->cache->get('_24hour_users')) === false)
 		{
 			// grab a list of users who are currently online
-			// and users who have visited in the last 24 hours
+			// and users who have visited in the last XX hours
 			$sql_ary = [
 				'SELECT'	=> 'u.user_id, u.user_colour, u.username, u.user_type, u.user_lastvisit, u.user_allow_viewonline, MAX(s.session_time) as session_time, s.session_viewonline',
 				'FROM'		=> [USERS_TABLE => 'u'],
@@ -341,7 +347,7 @@ class listener implements EventSubscriberInterface
 						'ON'	=> 's.session_user_id = u.user_id',
 					],
 				],
-				'WHERE'		=> 'u.user_lastvisit > ' . (int) $interval . ' OR s.session_user_id <> ' . ANONYMOUS,
+				'WHERE'		=> 'u.user_lastvisit > ' . (int) $this->lookback . ' OR s.session_user_id <> ' . ANONYMOUS,
 				'GROUP_BY'	=> 'u.user_id, s.session_viewonline',
 				'ORDER_BY'	=> 'u.username_clean',
 			];
@@ -388,13 +394,12 @@ class listener implements EventSubscriberInterface
 	 */
 	private function obtain_activity_data()
 	{
-		$interval = $this->define_interval($this->look_back());
 		if (($activity = $this->cache->get('_24hour_activity')) === false)
 		{
 			// total new posts in the last 24 hours
 			$sql = 'SELECT COUNT(post_id) AS new_posts
 					FROM ' . POSTS_TABLE . '
-					WHERE post_time > ' . (int) $interval;
+					WHERE post_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
 			$activity['posts'] = $this->db->sql_fetchfield('new_posts');
 			$this->db->sql_freeresult($result);
@@ -402,7 +407,7 @@ class listener implements EventSubscriberInterface
 			// total new topics in the last 24 hours
 			$sql = 'SELECT COUNT(topic_id) AS new_topics
 					FROM ' . TOPICS_TABLE . '
-					WHERE topic_time > ' . (int) $interval;
+					WHERE topic_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
 			$activity['topics'] = $this->db->sql_fetchfield('new_topics');
 			$this->db->sql_freeresult($result);
@@ -410,7 +415,7 @@ class listener implements EventSubscriberInterface
 			// total new users in the last 24 hours, counts inactive users as well
 			$sql = 'SELECT COUNT(user_id) AS new_users
 					FROM ' . USERS_TABLE . '
-					WHERE user_regdate > ' . (int) $interval;
+					WHERE user_regdate > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
 			$activity['users'] = $this->db->sql_fetchfield('new_users');
 			$this->db->sql_freeresult($result);
@@ -424,7 +429,7 @@ class listener implements EventSubscriberInterface
 	private function obtain_guest_count_24()
 	{
 		$total_guests_online_24 = 0;
-		$interval = $this->define_interval($this->look_back());
+
 		if ($this->config['load_online_guests'])
 		{
 			// Get number of online guests for the past 24 hours
@@ -438,14 +443,14 @@ class listener implements EventSubscriberInterface
 							SELECT DISTINCT session_ip
 							FROM ' . SESSIONS_TABLE . '
 							WHERE session_user_id = ' . ANONYMOUS . '
-								AND session_time >= ' . ($interval - ((int) ($interval % 60))) . ')';
+								AND session_time >= ' . ($this->lookback - ((int) ($this->lookback % 60))) . ')';
 				}
 				else
 				{
 					$sql = 'SELECT COUNT(DISTINCT session_ip) as num_guests_24
 						FROM ' . SESSIONS_TABLE . '
 						WHERE session_user_id = ' . ANONYMOUS . '
-							AND session_time >= ' . ($interval - ((int) ($interval % 60)));
+							AND session_time >= ' . ($this->lookback - ((int) ($this->lookback % 60)));
 				}
 				$result = $this->db->sql_query($sql);
 				$total_guests_online_24 = (int) $this->db->sql_fetchfield('num_guests_24');
@@ -467,7 +472,7 @@ class listener implements EventSubscriberInterface
 		 * 86400 = 24 hours
 		 * 604800 = past 7 days
 		 * 2628000 = past month
-		 * DO NOT SET THE NUMBER OF SECONDS TO LESS THAN 60
+		 * DO NOT SET THE NUMBER OF SECONDS TO LESS THAN 60!!
 		*/
 		$look_back = 86400;
 

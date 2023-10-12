@@ -49,11 +49,11 @@ $lang = array_merge($lang, [
 		2 => '%d days',
 	],
 	'24HOUR_HOUR' => [
-		1 => ' %d hour',
+		1 => ' hour',
 		2 => ' %d hours',
 	],
 	'24HOUR_MIN' => [
-		1 => ' %d minute',
+		1 => ' minute',
 		2 => ' %d mintues',
 	],
 	'24HOUR_AND' => ' and ',
