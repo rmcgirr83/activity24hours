@@ -401,7 +401,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . POSTS_TABLE . '
 					WHERE post_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['posts'] = $this->db->sql_fetchfield('new_posts');
+			$activity['posts'] = (int) $this->db->sql_fetchfield('new_posts');
 			$this->db->sql_freeresult($result);
 
 			// total new topics in the last 24 hours
@@ -409,7 +409,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . TOPICS_TABLE . '
 					WHERE topic_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['topics'] = $this->db->sql_fetchfield('new_topics');
+			$activity['topics'] = (int) $this->db->sql_fetchfield('new_topics');
 			$this->db->sql_freeresult($result);
 
 			// total new users in the last 24 hours, counts inactive users as well
@@ -417,7 +417,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . USERS_TABLE . '
 					WHERE user_regdate > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['users'] = $this->db->sql_fetchfield('new_users');
+			$activity['users'] = (int) $this->db->sql_fetchfield('new_users');
 			$this->db->sql_freeresult($result);
 
 			// cache this data for 5 minutes, this improves performance
