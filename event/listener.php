@@ -155,15 +155,16 @@ class listener implements EventSubscriberInterface
 
 		$this->language->add_lang('common', 'rmcgirr83/activity24hours');
 
-		// This sets our header for the extension to be dynamic based on the seconds input in the look_back function that is defined at the bottom of this file
-		$lookback_seconds = $this->look_back();
-
-		$seconds_error = '';
-		if ($lookback_seconds < 60)
+		// Must have more than 60 seconds for the look back period
+		$lookback_seconds = $this->cache->get('_24hour_lookback');
+		$lookback_seconds_error = '';
+		if ($lookback_seconds < 60 && $this->auth->acl_get('a_'))
 		{
-			$seconds_error = $this->auth->acl_get('a_') ? true : false;
+			$this->template->assign_var('HOUR_ERROR',true);
+			return;
 		}
 
+		// This sets our header for the extension to be dynamic based on the seconds input in the look_back function that is defined at the bottom of this file
 		$seconds_in_a_minute = 60;
 		$seconds_in_an_hour = 3600;
 		$seconds_in_a_day = 24 * $seconds_in_an_hour;
@@ -300,13 +301,11 @@ class listener implements EventSubscriberInterface
 			'BOTS_24HOUR_TOTAL'		=> $this->language->lang('BOTS_24HOUR_TOTAL', $bot_count),
 			'HIDDEN_24HOUR_TOTAL'	=> $this->language->lang('HIDDEN_24HOUR_TOTAL', $hidden_count),
 			'GUEST_ONLINE_24'		=> $total_guests_online_24 ? $this->language->lang('GUEST_ONLINE_24', $total_guests_online_24) : '',
-			'HOUR_TOPICS'			=> $this->language->lang('24HOUR_TOPICS', $activity['topics']),
-			'HOUR_POSTS'			=> $this->language->lang('24HOUR_POSTS', $activity['posts']),
-			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['users']),
+			'HOUR_TOPICS'			=> $this->language->lang('24HOUR_TOPICS', $activity['new_topics']),
+			'HOUR_POSTS'			=> $this->language->lang('24HOUR_POSTS', $activity['new_posts']),
+			'HOUR_USERS'			=> $this->language->lang('24HOUR_USERS', $activity['new_users']),
 			'S_CAN_VIEW_24_HOURS'	=> $this->auth->acl_get('u_a24hrs_view') ? true : false,
 			'S_TABBEDSTATBLOCK'		=> $this->ext_manager->is_enabled('zyleta/tabbedstatblock'),
-
-			'HOUR_ERROR'			=> $seconds_error,
 
 			'L_TWENTYFOURHOUR_STATS'	=> $this->language->lang('TWENTYFOURHOUR_STATS') . ' ' . $lookback_string,
 		];
@@ -401,7 +400,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . POSTS_TABLE . '
 					WHERE post_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['posts'] = $this->db->sql_fetchfield('new_posts');
+			$activity['new_posts'] = (int) $this->db->sql_fetchfield('new_posts');
 			$this->db->sql_freeresult($result);
 
 			// total new topics in the last 24 hours
@@ -409,7 +408,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . TOPICS_TABLE . '
 					WHERE topic_time > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['topics'] = $this->db->sql_fetchfield('new_topics');
+			$activity['new_topics'] = (int) $this->db->sql_fetchfield('new_topics');
 			$this->db->sql_freeresult($result);
 
 			// total new users in the last 24 hours, counts inactive users as well
@@ -417,7 +416,7 @@ class listener implements EventSubscriberInterface
 					FROM ' . USERS_TABLE . '
 					WHERE user_regdate > ' . (int) $this->lookback;
 			$result = $this->db->sql_query($sql);
-			$activity['users'] = $this->db->sql_fetchfield('new_users');
+			$activity['new_users'] = (int) $this->db->sql_fetchfield('new_users');
 			$this->db->sql_freeresult($result);
 
 			// cache this data for 5 minutes, this improves performance
@@ -434,7 +433,7 @@ class listener implements EventSubscriberInterface
 		{
 			// Get number of online guests for the past 24 hours
 			// caching and main sql if none yet
-			if (($total_guests_online_24 = $this->cache->get('_total_guests_online_24')) === false)
+			if (($total_guests_online_24 = $this->cache->get('_24hour_guests_online')) === false)
 			{
 				if ($this->db->get_sql_layer() === 'sqlite' || $this->db->get_sql_layer() === 'sqlite3')
 				{
@@ -458,7 +457,7 @@ class listener implements EventSubscriberInterface
 				$this->db->sql_freeresult($result);
 
 				// cache this data for 5 minutes, this improves performance
-				$this->cache->put('_total_guests_online_24', $total_guests_online_24, 300);
+				$this->cache->put('_24hour_guests_online', $total_guests_online_24, 300);
 			}
 		}
 		return $total_guests_online_24;
@@ -468,6 +467,7 @@ class listener implements EventSubscriberInterface
 	{
 		/* you can define the amount to look back
 		 * be careful with this, it may cause performance issues on your forum
+		 * the number set below represents the number of seconds for the look back period
 		 * (60 * 60) * hours * days
 		 * 86400 = 24 hours
 		 * 604800 = past 7 days
@@ -487,7 +487,17 @@ class listener implements EventSubscriberInterface
 		$vars = ['look_back'];
 		extract($this->dispatcher->trigger_event('rmcgirr83.activity24hours.modify_activity_look_back', compact($vars)));
 
-		return $look_back;
+		// destroy the cache if the above changes
+		if ($this->cache->get('_24hour_lookback') != $look_back)
+		{
+			$this->cache->destroy('_24hour_guests_online');
+			$this->cache->destroy('_24hour_activity');
+			$this->cache->destroy('_24hour_users');
+			// cache this data for ever
+			$this->cache->put('_24hour_lookback', $look_back);
+		}
+
+		return $this->cache->get('_24hour_lookback');
 	}
 
 	private function define_interval($look_back = 0)

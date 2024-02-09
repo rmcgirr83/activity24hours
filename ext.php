@@ -15,8 +15,8 @@ namespace rmcgirr83\activity24hours;
 */
 class ext extends \phpbb\extension\base
 {
-	/** @var string Require phpBB 3.2.0 */
-	const PHPBB_MIN_VERSION = '3.2.0';
+	/** @var string Require phpBB 3.3.0 */
+	const PHPBB_MIN_VERSION = '3.3.0';
 	/**
 	 * Enable extension if phpBB version requirement is met
 	 *

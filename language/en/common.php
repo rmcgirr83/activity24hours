@@ -67,7 +67,7 @@ $lang = array_merge($lang, [
 		1 => 'In total there was %d user :: ',
 		2 => 'In total there were %d users :: ',
 	],
-	'24HOUR_INVALID'	=> 'Please set the number of seconds in the 24Hour Activity extension listener file to greater than 60',
+	'24HOUR_INVALID'	=> 'Please set the number in the look_back function in the 24Hour Activity extension listener file to be at least 60',
 	'SHOW_LIST'	=> 'Show List',
 	'HIDE_LIST'	=> 'Hide List',
 	'EXTENSION_REQUIREMENTS'	=> 'This extension requires phpBB version %1$s.<br>Please check which versions you have and update accordingly to use this extension.',
